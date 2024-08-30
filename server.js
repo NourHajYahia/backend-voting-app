@@ -4,35 +4,46 @@ const app = express();
 const port = 6000;
 
 // Create a Redis client
-const client = redis.createClient();
+const client = redis.createClient({
+  url: 'redis://localhost:6379', // URL for Redis instance
+  // password: '123' 
+});
+
+// Handle connection errors
+client.on('error', (err) => {
+  console.error('Redis error:', err);
+});
+
+// Connect to Redis
+client.connect();
 
 // Middleware to parse JSON
 app.use(express.json());
 
-// Initialize Redis with default values if not already set
-client.hSet('votes', 'dogs', 0);
-client.hSet('votes', 'cats', 0);
+// // Initialize Redis with default values if not already set
+// client.hSet('votes', 'dogs', 0);
+// client.hSet('votes', 'cats', 0);
 
-// Route to get vote counts
-app.get('/votes', (req, res) => {
-  client.hGetAll('votes', (err, votes) => {
-    if (err) return res.status(500).send(err);
-    res.json(votes);
-  });
-});
+// // Route to get vote counts
+// app.get('/votes', (req, res) => {
+//   client.hGetAll('votes', (err, votes) => {
+//     if (err) return res.status(500).send(err);
+//     res.json(votes);
+//   });
+// });
 
-// Route to cast a vote
-app.post('/vote', (req, res) => {
-  const { option } = req.body;
-  if (!['dogs', 'cats'].includes(option)) {
-    return res.status(400).send('Invalid option');
-  }
+// // Route to cast a vote
+// app.post('/vote', (req, res) => {
+//   const { option } = req.body;
+//   if (!['dogs', 'cats'].includes(option)) {
+//     return res.status(400).send('Invalid option');
+//   }
 
-  client.hIncrBy('votes', option, 1, (err, newCount) => {
-    if (err) return res.status(500).send(err);
-    res.json({ option, count: newCount });
-  });
-});
+//   client.hIncrBy('votes', option, 1, (err, newCount) => {
+//     if (err) return res.status(500).send(err);
+//     res.json({ option, count: newCount });
+//   });
+// });
 
 // Start the server
 app.listen(port, () => {
