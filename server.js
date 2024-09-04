@@ -8,6 +8,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+app.use(cors());
+
 const uri = 'mongodb://localhost:27017'; // Your MongoDB connection string
 const dbName = 'vote'; // Your database name
 const collectionName = 'VoteResult'; // Your collection name
