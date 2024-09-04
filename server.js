@@ -1,51 +1,56 @@
 const express = require('express');
-const redis = require('redis');
+const { MongoClient } = require('mongodb');
+const http = require('http');
+const socketIo = require('socket.io');
+
+// Initialize Express and create an HTTP server
 const app = express();
-const port = 6000;
+const server = http.createServer(app);
+const io = socketIo(server);
 
-// Create a Redis client
-const client = redis.createClient({
-  url: 'redis://localhost:6379', // URL for Redis instance
-  // password: '123' 
-});
+const uri = 'mongodb://localhost:27017'; // Your MongoDB connection string
+const dbName = 'vote'; // Your database name
+const collectionName = 'VoteResult'; // Your collection name
 
-// Handle connection errors
-client.on('error', (err) => {
-  console.error('Redis error:', err);
-});
+async function watchAnimalVotes() {
+  const client = new MongoClient(uri);
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+    const collection = db.collection(collectionName);
 
-// Connect to Redis
-client.connect();
+    // Set up a change stream to watch for changes to the 'count' field
+    const changeStream = collection.watch([
+      {
+        $match: {
+          'updateDescription.updatedFields.count': { $exists: true }
+        }
+      }
+    ]);
 
-// Middleware to parse JSON
-app.use(express.json());
+    // Listen for changes
+    changeStream.on('change', (change) => {
+      console.log('Change detected:', change);
+      
+      // Full document after the change
+      const updatedDocument = change.fullDocument;
+      console.log('Updated document:', updatedDocument);
 
-// // Initialize Redis with default values if not already set
-// client.hSet('votes', 'dogs', 0);
-// client.hSet('votes', 'cats', 0);
+      // Process the change event (e.g., send to clients via WebSocket)
+      // You can emit the updated document or specific fields
+      // io.emit('voteCountUpdated', updatedDocument);
+    });
 
-// // Route to get vote counts
-// app.get('/votes', (req, res) => {
-//   client.hGetAll('votes', (err, votes) => {
-//     if (err) return res.status(500).send(err);
-//     res.json(votes);
-//   });
-// });
+    console.log('Watching for changes on VoteResult collection...');
+  } catch (err) {
+    console.error('Error watching changes:', err);
+  }
+}
 
-// // Route to cast a vote
-// app.post('/vote', (req, res) => {
-//   const { option } = req.body;
-//   if (!['dogs', 'cats'].includes(option)) {
-//     return res.status(400).send('Invalid option');
-//   }
-
-//   client.hIncrBy('votes', option, 1, (err, newCount) => {
-//     if (err) return res.status(500).send(err);
-//     res.json({ option, count: newCount });
-//   });
-// });
+watchAnimalVotes();
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+const PORT = process.env.PORT || 5001;
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
