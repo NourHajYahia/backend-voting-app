@@ -2,27 +2,32 @@ const express = require('express');
 const { MongoClient } = require('mongodb');
 const http = require('http');
 const socketIo = require('socket.io');
-const cors = require('cors');
+const cors = require('cors'); 
+require('dotenv').config();
+
+// Now you can use these variables in your application
+const mongoUrl = process.env.DB_URL;
+const fronUrl = process.env.FRONT_URL;
 
 // Initialize Express and create an HTTP server
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000", // React app's origin
+    origin: fronUrl, // React app's origin
     methods: ["GET", "POST"]
   }
 });
 
 // Use CORS middleware before any routes or Socket.IO setup
 app.use(cors({
-  origin: "http://localhost:3000", // React app's origin
+  origin: fronUrl, // React app's origin
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"],
 }));
 
 
-const uri = 'mongodb://localhost:27017'; // Your MongoDB connection string
+const uri = mongoUrl; // Your MongoDB connection string
 const dbName = 'vote'; // Your database name
 const collectionName = 'VoteResult'; // Your collection name
 
