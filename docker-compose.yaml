@@ -1,21 +1,47 @@
-version: '3.8'
+version: '3'
 services:
   mongo:
     image: mongo:4
-    container_name: mongo-replica
-    ports:
-      - 27017:27017
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongo-data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
+
   redis:
-    image: redis:latest
-    container_name: redis
+    image: redis
+
+
+  vote:
+    image: voting-app
     ports:
-      - "6379:6379"
+      - 5000:5000
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    
+  worker:
+    image: worker-app
+    environment:
+      - REDIS_HOST=redis
+      - MONGO_HOST=mongo
+
+  backend:
+    image: backend-app
+    ports:
+      - 5001:5001
+    environment:
+      - DB_URL=mongodb://mongo:27017
+      - FRONT_URL=http://result:3000
+
+  result:
+    image: result-app
+    ports:
+      - 3000:3000
+    environment:
+      - BACKEND_API_URL=http://backend:5001/api/vote-results
+      - SOCKET_IO_API_URL=http://backend:5001/
 
 
 volumes:
   mongo-data:
+

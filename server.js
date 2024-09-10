@@ -9,6 +9,10 @@ require('dotenv').config();
 const mongoUrl = process.env.DB_URL;
 const fronUrl = process.env.FRONT_URL;
 
+console.log(`Connecting to front at ${fronUrl}`);
+console.log(`Connecting to mongo at ${mongoUrl}`);
+
+
 // Initialize Express and create an HTTP server
 const app = express();
 const server = http.createServer(app);
