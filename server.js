@@ -1,9 +1,10 @@
 const express = require('express');
-const { MongoClient } = require('mongodb');
 const http = require('http');
 const socketIo = require('socket.io');
-const cors = require('cors'); 
+const cors = require('cors');  
 require('dotenv').config();
+const mongoose = require('mongoose');
+
 
 // Now you can use these variables in your application
 const mongoUrl = process.env.DB_URL;
@@ -16,6 +17,7 @@ console.log(`Connecting to mongo at ${mongoUrl}`);
 // Initialize Express and create an HTTP server
 const app = express();
 const server = http.createServer(app);
+
 const io = socketIo(server, {
   cors: {
     origin: fronUrl, // React app's origin
@@ -30,37 +32,41 @@ app.use(cors({
   allowedHeaders: ["Content-Type"],
 }));
 
+// const uri = mongoUrl; // Your MongoDB connection string
+// const dbName = 'vote'; // Your database name
+// const collectionName = 'VoteResult'; // Your collection name
 
-const uri = mongoUrl; // Your MongoDB connection string
-const dbName = 'vote'; // Your database name
-const collectionName = 'VoteResult'; // Your collection name
+mongoose.connect(mongoUrl, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+const db = mongoose.connection;
+
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', () => {
+  console.log('Connected to MongoDB');
+});
+
+
+const voteResultSchema = new mongoose.Schema({
+  animal: String,
+  count: Number,
+},{collection: 'VoteResult'});
+
+// Create a Vote model
+const VoteResult = mongoose.model('VoteResult', voteResultSchema);
 
 async function watchAnimalVotes() {
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });  
   try {
-    await client.connect();
-    const db = client.db(dbName);
-    const collection = db.collection(collectionName);
-
-    // Set up a change stream to watch for changes to the 'count' field
-    const changeStream = collection.watch([
-      {
-        $match: {
-          $or: [
-            { 'operationType': 'update', 'updateDescription.updatedFields.count': { $exists: true } },
-            { 'operationType': 'insert' }, // Also listen for new documents
-            { 'operationType': 'replace' } 
-          ]
-        }
-      }
-    ], { fullDocument: 'updateLookup' }); // Ensure full documents are returned
+    const changeStream = VoteResult.watch(); 
 
     // Listen for changes
     changeStream.on('change', (change) => {
       console.log('Change detected:', change);
       
       // Full document after the change
-      const updatedDocument = change.fullDocument;
+      const updatedDocument = JSON.stringify(change);
       console.log('Updated document:', updatedDocument);
 
       // Process the change event (e.g., send to clients via WebSocket)
@@ -76,24 +82,18 @@ async function watchAnimalVotes() {
 
 // Route to get all vote results
 app.get('/api/vote-results', async (req, res) => {
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-  try {
-    await client.connect();
-    const db = client.db(dbName);
-    const collection = db.collection(collectionName);
 
-    // Query all documents in the collection
-    const results = await collection.find({}).toArray();
-    res.json(results);
+  try {
+    const votes = await VoteResult.find();
+    res.json(votes);
   } catch (err) {
     console.error('Error fetching vote results:', err);
     res.status(500).send('Internal Server Error');
-  } finally {
-    await client.close();
   }
 });
 
 watchAnimalVotes();
+
 
 // Start the server
 const PORT = process.env.PORT || 5001;

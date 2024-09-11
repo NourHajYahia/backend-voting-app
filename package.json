@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -12,9 +13,18 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "express": "^4.20.0",
     "mongodb": "^6.8.0",
+    "mongoose": "^5.10.0",
     "redis": "^4.7.0",
     "socket.io": "^4.7.5"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NourHajYahia/backend-voting-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NourHajYahia/backend-voting-app/issues"
+  },
+  "homepage": "https://github.com/NourHajYahia/backend-voting-app#readme"
 }
