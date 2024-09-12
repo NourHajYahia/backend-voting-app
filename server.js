@@ -48,19 +48,19 @@ const VoteResult = mongoose.model('VoteResult', voteResultSchema);
 
 async function watchAnimalVotes() {
   try {
-    const changeStream = VoteResult.watch(); 
+    const changeStream = VoteResult.watch([], { fullDocument: 'updateLookup' }); 
 
     // Listen for changes
     changeStream.on('change', (change) => {
       console.log('Change detected:', change);
       
       // Full document after the change
-      const updatedDocument = JSON.stringify(change);
-      console.log('Updated document:', updatedDocument);
+      // const updatedDocument = JSON.stringify(change);
+      console.log('Updated document:', change);
 
       // Process the change event (e.g., send to clients via WebSocket)
       // You can emit the updated document or specific fields
-      io.emit('voteCountUpdated', updatedDocument);
+      io.emit('voteCountUpdated', change);
     });
 
     console.log('Watching for changes on VoteResult collection...');
