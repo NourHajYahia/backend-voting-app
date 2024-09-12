@@ -28,20 +28,16 @@ services:
   backend:
     image: backend-app
     ports:
-      - 5001:5001
+      - 4000:4000
     environment:
       - DB_URL=mongodb://mongo:27017/vote
       - FRONT_URL=http://result:3000
-    depends_on:
-      - mongo
 
-  # result:
-  #   image: result-app
-  #   ports:
-  #     - 3000:3000
-  #   environment:
-  #     - BACKEND_API_URL=http://backend:5001/api/vote-results
-  #     - SOCKET_IO_API_URL=http://backend:5001/
+
+  result:
+    image: result-app
+    ports:
+      - 3000:3000
 
 
 volumes:
