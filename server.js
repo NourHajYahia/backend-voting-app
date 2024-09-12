@@ -19,22 +19,11 @@ const app = express();
 const server = http.createServer(app);
 
 const io = socketIo(server, {
-  cors: {
-    origin: fronUrl, // React app's origin
-    methods: ["GET", "POST"]
-  }
+  cors: { origin: '*' }
 });
 
 // Use CORS middleware before any routes or Socket.IO setup
-app.use(cors({
-  origin: fronUrl, // React app's origin
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"],
-}));
-
-// const uri = mongoUrl; // Your MongoDB connection string
-// const dbName = 'vote'; // Your database name
-// const collectionName = 'VoteResult'; // Your collection name
+app.use(cors());
 
 mongoose.connect(mongoUrl, {
   useNewUrlParser: true,
@@ -96,7 +85,7 @@ watchAnimalVotes();
 
 
 // Start the server
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
