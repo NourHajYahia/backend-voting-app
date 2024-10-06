@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app-deploy
+  labels:
+    name: backend-app-deploy
+    app: demo-voting-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: backend-app-pod
+      app: demo-voting-app
+
+  template:
+    metadata:
+      name: backend-app-pod
+      labels:
+        name: backend-app-pod
+        app: demo-voting-app
+    spec:
+      containers:
+        - name: backend-app
+          image: gipsyone/backend-app:latest
+          ports:
+            - containerPort: 80
+      
