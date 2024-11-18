@@ -24,4 +24,7 @@ spec:
           image: gipsyone/backend-app:latest
           ports:
             - containerPort: 80
+          env:
+            - name: DB_URL
+              value: "mongodb://mongo:27017/vote"
       
